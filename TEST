@@ -1,0 +1,29 @@
+SELECT 
+  '[' ||
+  LISTAGG(
+    '{' ||
+    '"kind":"CONTRACT_MODIFIED",' ||
+    '"timestamp":"' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') || '",' ||
+    '"contract":{' ||
+    '"digitalid":"' || sp.digital_id || '",' ||
+    '"contractid":"' || TRUNC(sp.contrat) || '",' ||
+    '"productcode":"' || pr.cpro || '"},' ||
+    '"customer":{' ||
+    '"firstname":"' || cl.nom || '",' ||
+    '"lastname":"' || cl.pre || '",' ||
+    '"countrycode":"SGB",' ||
+    '"civility":"' || cl.sext || '",' ||
+    '"clientid":"' || cl.cli || '",' ||
+    '"phone":"' || sp.telephone || '",' ||
+    '"emailaddress":"' || sp.email || '",' ||
+    '"maxmonthtransfert":"' || TRUNC(sp.plaf_mens) || '",' ||
+    '"maxweektransfert":"' || TRUNC(sp.plaf_hebdo) || '"}}' 
+  , ',') WITHIN GROUP (ORDER BY 1) ||
+  ']'
+  AS aggregated_content
+FROM
+  bank.bkcli cl
+  JOIN bank.sp_sousc_bankup sp ON sp.client = cl.cli
+  JOIN bank.bkprdcli pr ON pr.ndos = sp.digital_id
+WHERE
+  cl.cli IN (SELECT client FROM bank.sp_sousc_bankup WHERE eta <> '9' AND dou >= '2024-11-01');
