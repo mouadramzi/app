@@ -1,1 +1,47 @@
-
+WITH timestamp_cte AS (
+  SELECT TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS current_timestamp
+  FROM dual
+),
+filtered_clients AS (
+  SELECT DISTINCT 
+    sp.client, 
+    sp.digital_id, 
+    sp.contrat, 
+    sp.telephone, 
+    sp.email, 
+    sp.plaf_mens, 
+    sp.plaf_hebdo
+  FROM 
+    bank.sp_sousc_bankup sp
+  WHERE 
+    sp.eta <> '9' 
+    AND sp.dou >= TO_DATE('2024-11-01', 'YYYY-MM-DD')
+)
+SELECT 
+  '[' ||
+  LISTAGG(
+    '{' ||
+    '"kind":"CONTRACT_MODIFIED",' ||
+    '"timestamp":"' || t.current_timestamp || '",' ||
+    '"contract":{' ||
+    '"digitalid":"' || sp.digital_id || '",' ||
+    '"contractid":"' || TRUNC(sp.contrat) || '",' ||
+    '"productcode":"' || pr.cpro || '"},' ||
+    '"customer":{' ||
+    '"firstname":"' || cl.nom || '",' ||
+    '"lastname":"' || cl.pre || '",' ||
+    '"countrycode":"SGB",' ||
+    '"civility":"' || cl.sext || '",' ||
+    '"clientid":"' || cl.cli || '",' ||
+    '"phone":"' || sp.telephone || '",' ||
+    '"emailaddress":"' || sp.email || '",' ||
+    '"maxmonthtransfert":"' || TRUNC(sp.plaf_mens) || '",' ||
+    '"maxweektransfert":"' || TRUNC(sp.plaf_hebdo) || '"}}'
+  , ',') WITHIN GROUP (ORDER BY sp.client) ||
+  ']'
+  AS aggregated_content
+FROM
+  filtered_clients sp
+  JOIN bank.bkcli cl ON sp.client = cl.cli
+  JOIN bank.bkprdcli pr ON pr.ndos = sp.digital_id
+  CROSS JOIN timestamp_cte t;
