@@ -1,29 +1,40 @@
-SELECT 
-  '[' ||
-  LISTAGG(
-    '{' ||
-    '"kind":"CONTRACT_MODIFIED",' ||
-    '"timestamp":"' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') || '",' ||
-    '"contract":{' ||
-    '"digitalid":"' || sp.digital_id || '",' ||
-    '"contractid":"' || TRUNC(sp.contrat) || '",' ||
-    '"productcode":"' || pr.cpro || '"},' ||
-    '"customer":{' ||
-    '"firstname":"' || cl.nom || '",' ||
-    '"lastname":"' || cl.pre || '",' ||
-    '"countrycode":"SGB",' ||
-    '"civility":"' || cl.sext || '",' ||
-    '"clientid":"' || cl.cli || '",' ||
-    '"phone":"' || sp.telephone || '",' ||
-    '"emailaddress":"' || sp.email || '",' ||
-    '"maxmonthtransfert":"' || TRUNC(sp.plaf_mens) || '",' ||
-    '"maxweektransfert":"' || TRUNC(sp.plaf_hebdo) || '"}}' 
-  , ',') WITHIN GROUP (ORDER BY 1) ||
-  ']'
-  AS aggregated_content
-FROM
-  bank.bkcli cl
-  JOIN bank.sp_sousc_bankup sp ON sp.client = cl.cli
-  JOIN bank.bkprdcli pr ON pr.ndos = sp.digital_id
-WHERE
-  cl.cli IN (SELECT client FROM bank.sp_sousc_bankup WHERE eta <> '9' AND dou >= '2024-11-01');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commandes de Jus</title>
+</head>
+<body>
+    <form action="collect_orders.php" method="post">
+        <table border="1">
+            <tr>
+                <th>Produit</th>
+                <th>Prix (MAD)</th>
+                <th>Quantité</th>
+            </tr>
+            <tr>
+                <td>Jus d'Avocat</td>
+                <td>22</td>
+                <td><input type="number" name="quantities[Jus d'Avocat]" min="0" value="0"></td>
+            </tr>
+            <tr>
+                <td>Jus de Mangue</td>
+                <td>22</td>
+                <td><input type="number" name="quantities[Jus de Mangue]" min="0" value="0"></td>
+            </tr>
+            <tr>
+                <td>Jus de Kiwi</td>
+                <td>22</td>
+                <td><input type="number" name="quantities[Jus de Kiwi]" min="0" value="0"></td>
+            </tr>
+            <!-- Ajouter plus de lignes pour chaque produit -->
+            <tr>
+                <td colspan="3" style="text-align: center;">
+                    <button type="submit">Passer la commande</button>
+                </td>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>
